@@ -2,6 +2,7 @@ package com.github.hugovallada.forum.controller;
 
 import com.github.hugovallada.forum.controller.dto.DetalhesTopicoDto;
 import com.github.hugovallada.forum.controller.dto.TopicoDto;
+import com.github.hugovallada.forum.controller.form.AtualizacaoTopicoForm;
 import com.github.hugovallada.forum.controller.form.TopicoForm;
 import com.github.hugovallada.forum.modelo.Curso;
 import com.github.hugovallada.forum.modelo.Topico;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ public class TopicosController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<TopicoDto> cadastrar(@RequestBody @Valid TopicoForm topicoForm, UriComponentsBuilder uriBuilder){
         Topico topico = topicoRepository.save(topicoForm.converter(cursoRepository));
         URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
@@ -56,11 +59,24 @@ public class TopicosController {
     }
 
     @GetMapping("/{id}")
+    @Transactional
     public DetalhesTopicoDto detalhar(@PathVariable Long id){
         Topico topico = topicoRepository.getOne(id);
 
         return new DetalhesTopicoDto(topico);
 
+    }
+
+    @PutMapping("/{id}")
+    @Transactional // faz o commit
+    public TopicoDto atualizar(@RequestBody @Valid AtualizacaoTopicoForm topicoForm, @PathVariable Long id){
+        Topico topico = topicoForm.atualizar(id, topicoRepository);
+        return new TopicoDto(topico);
+    }
+
+    @DeleteMapping("/{id}")
+    public void remover(@PathVariable Long id){
+        topicoRepository.deleteById(id);
     }
 
 }
