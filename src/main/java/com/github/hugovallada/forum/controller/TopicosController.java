@@ -60,23 +60,40 @@ public class TopicosController {
 
     @GetMapping("/{id}")
     @Transactional
-    public DetalhesTopicoDto detalhar(@PathVariable Long id){
-        Topico topico = topicoRepository.getOne(id);
+    public ResponseEntity<DetalhesTopicoDto> detalhar(@PathVariable Long id){
+        Optional<Topico> topicoOpt = topicoRepository.findById(id);
 
-        return new DetalhesTopicoDto(topico);
+        if(topicoOpt.isPresent()){
+            return ResponseEntity.ok(new DetalhesTopicoDto(topicoOpt.get()));
+        }
 
+        return ResponseEntity.notFound().build();
     }
 
     @PutMapping("/{id}")
     @Transactional // faz o commit
-    public TopicoDto atualizar(@RequestBody @Valid AtualizacaoTopicoForm topicoForm, @PathVariable Long id){
-        Topico topico = topicoForm.atualizar(id, topicoRepository);
-        return new TopicoDto(topico);
+    public ResponseEntity<TopicoDto> atualizar(@RequestBody @Valid AtualizacaoTopicoForm topicoForm, @PathVariable Long id){
+       Optional<Topico> topicoOpt = topicoRepository.findById(id);
+
+       if(topicoOpt.isPresent()){
+           Topico topico = topicoForm.atualizar(id, topicoRepository);
+           return ResponseEntity.ok(new TopicoDto(topico));
+       }
+
+        return ResponseEntity.notFound().build();
+
     }
 
     @DeleteMapping("/{id}")
-    public void remover(@PathVariable Long id){
-        topicoRepository.deleteById(id);
+    public ResponseEntity<Void> remover(@PathVariable Long id){
+        Optional<Topico> topicoOptional = topicoRepository.findById(id);
+        if(topicoOptional.isPresent()){
+            topicoRepository.deleteById(id);
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.notFound().build();
+
     }
 
 }
