@@ -9,6 +9,8 @@ import com.github.hugovallada.forum.modelo.Topico;
 import com.github.hugovallada.forum.repository.CursoRepository;
 import com.github.hugovallada.forum.repository.TopicoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +65,7 @@ public class TopicosController {
 //    }
 
     @GetMapping
+    @Cacheable(value = "listaDeTopicos")
     public Page<TopicoDto> lista(
             @RequestParam(required = false) String nomeCurso,
             @PageableDefault(sort = "id", direction = Sort.Direction.DESC, page = 0, size = 10) Pageable paginacao
@@ -81,6 +84,7 @@ public class TopicosController {
 
     @PostMapping
     @Transactional
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity<TopicoDto> cadastrar(@RequestBody @Valid TopicoForm topicoForm, UriComponentsBuilder uriBuilder){
         Topico topico = topicoRepository.save(topicoForm.converter(cursoRepository));
         URI uri = uriBuilder.path("/topicos/{id}").buildAndExpand(topico.getId()).toUri();
@@ -102,6 +106,7 @@ public class TopicosController {
 
     @PutMapping("/{id}")
     @Transactional // faz o commit
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity<TopicoDto> atualizar(@RequestBody @Valid AtualizacaoTopicoForm topicoForm, @PathVariable Long id){
        Optional<Topico> topicoOpt = topicoRepository.findById(id);
 
@@ -115,6 +120,7 @@ public class TopicosController {
     }
 
     @DeleteMapping("/{id}")
+    @CacheEvict(value = "listaDeTopicos", allEntries = true)
     public ResponseEntity<Void> remover(@PathVariable Long id){
         Optional<Topico> topicoOptional = topicoRepository.findById(id);
         if(topicoOptional.isPresent()){
